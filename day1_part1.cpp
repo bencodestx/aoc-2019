@@ -1,9 +1,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "day1_part1.hpp"
 #include "input.hpp"
-
-constexpr auto fuel_required = [](const uint64_t mass) { return mass / 3 - 2; };
 
 int main() {
   const auto masses = read<uint64_t>();
