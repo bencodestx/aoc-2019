@@ -4,7 +4,7 @@ project( aoc2019 )
 
 SET (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET (CMAKE_C_FLAGS "-Wall -Wextra -Werror -std=c99" )
-SET (CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -std=c++14")
+SET (CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wno-c++17-extensions -std=c++14")
 
 include_directories("Catch2/single_include")
 
@@ -20,3 +20,5 @@ add_executable(day2_part1 day2_part1.cpp)
 add_executable(day2_part2 day2_part2.cpp)
 add_executable(day3_part1 day3_part1.cpp)
 add_executable(day3_part2 day3_part2.cpp)
+add_executable(day4_part1 day4_part1.cpp)
+add_executable(day4_part2 day4_part2.cpp)
