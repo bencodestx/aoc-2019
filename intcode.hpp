@@ -13,6 +13,7 @@ void execute(
         []() {
           int x;
           std::cin >> x;
+          return x;
         },
     std::function<void(int)> &&output_int =
         [](const int i) { std::cout << i << std::endl; }) {
