@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <numeric>
 
 constexpr auto fuel_required_for_mass = [](const auto mass) {
