@@ -1,3 +1,5 @@
+#pragma once
+
 #include <array>
 #include <functional>
 #include <iostream>
@@ -7,7 +9,11 @@ namespace intcode {
 constexpr size_t REGISTER_COUNT = 1000;
 using Registers = std::array<int, REGISTER_COUNT>;
 
-void execute(
+bool is_halted(const Registers &registers, int position) {
+  return registers[position] == 99;
+}
+
+int execute(
     Registers &registers,
     std::function<int()> &&input_int =
         []() {
@@ -16,8 +22,9 @@ void execute(
           return x;
         },
     std::function<void(int)> &&output_int =
-        [](const int i) { std::cout << i << std::endl; }) {
-  size_t position = 0;
+        [](const int i) { std::cout << i << std::endl; },
+    const int initial_position = 0, const bool break_after_output = false) {
+  size_t position = initial_position;
   std::array<int, 3> immediates{0, 0, 0};
   std::array<int *, 3> ptrs{};
   while (true) {
@@ -75,6 +82,9 @@ void execute(
     case 4:
       output_int(*ptrs[0]);
       position += 2;
+      if (break_after_output) {
+        return position;
+      }
       break;
     case 5:
       if (0 != *ptrs[0]) {
@@ -107,7 +117,7 @@ void execute(
       position += 4;
       break;
     case 99:
-      return;
+      return position;
     default:
       throw std::runtime_error("Invalid opcode");
     }
