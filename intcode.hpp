@@ -1,36 +1,52 @@
 #pragma once
 
-#include <array>
 #include <functional>
 #include <iostream>
+#include <unordered_map>
+#include <vector>
 
 namespace intcode {
 
-constexpr size_t REGISTER_COUNT = 1000;
-using Registers = std::array<int, REGISTER_COUNT>;
+using Registers = std::unordered_map<int64_t, int64_t>;
 
-bool is_halted(const Registers &registers, int position) {
-  return registers[position] == 99;
+Registers from_vector(const std::vector<int64_t> &initial) {
+  Registers registers;
+  for (int64_t i = 0; i < std::size(initial); ++i) {
+    registers[i] = initial[i];
+  }
+  return registers;
 }
 
-int execute(
-    Registers &registers,
-    std::function<int()> &&input_int =
-        []() {
-          int x;
-          std::cin >> x;
-          return x;
-        },
-    std::function<void(int)> &&output_int =
-        [](const int i) { std::cout << i << std::endl; },
-    const int initial_position = 0, const bool break_after_output = false) {
+bool is_halted(const Registers &registers, int64_t position) {
+  if (const auto it = registers.find(position); std::end(registers) != it) {
+    return it->second == 99;
+  }
+  return false;
+}
+
+namespace detail {
+
+constexpr auto default_input_int = []() {
+  int64_t x;
+  std::cin >> x;
+  return x;
+};
+
+constexpr auto default_output_int = [](const int64_t i) {
+  std::cout << i << std::endl;
+};
+
+template <typename InputFn, typename OutputFn>
+int64_t execute(Registers &registers, int64_t &relative_offset,
+                InputFn &&input_int, OutputFn &&output_int,
+                const int64_t initial_position, const bool break_after_output) {
   size_t position = initial_position;
-  std::array<int, 3> immediates{0, 0, 0};
-  std::array<int *, 3> ptrs{};
+  std::array<int64_t, 3> immediates{0, 0, 0};
+  std::array<int64_t *, 3> ptrs{};
   while (true) {
     const auto instruction = registers[position + 0];
     const auto opcode = instruction % 100;
-    const std::array<int, 3> modes = {
+    const std::array<int64_t, 3> modes = {
         instruction / 100 % 10,
         instruction / 1'000 % 10,
         instruction / 10'000 % 10,
@@ -46,6 +62,7 @@ int execute(
       break;
     case 3:
     case 4:
+    case 9:
       operands = 1;
       break;
     case 5:
@@ -58,11 +75,19 @@ int execute(
     }
 
     for (int i = 0; i < operands; ++i) {
-      if (modes[i]) {
+      switch (modes[i]) {
+      case 0:
+        ptrs[i] = &registers[registers[position + 1 + i]];
+        break;
+      case 1:
         immediates[i] = registers[position + 1 + i];
         ptrs[i] = &immediates[i];
-      } else {
-        ptrs[i] = &registers[registers[position + 1 + i]];
+        break;
+      case 2:
+        ptrs[i] = &registers[registers[position + 1 + i] + relative_offset];
+        break;
+      default:
+        throw std::runtime_error("Unknown addressing mode");
       }
     }
 
@@ -116,6 +141,10 @@ int execute(
       }
       position += 4;
       break;
+    case 9:
+      relative_offset += *ptrs[0];
+      position += 2;
+      break;
     case 99:
       return position;
     default:
@@ -124,12 +153,48 @@ int execute(
   }
 }
 
-uint64_t execute(const uint64_t noun, const uint64_t verb,
-                 Registers registers) {
+} // namespace detail
+
+void execute(Registers &registers, std::function<int64_t()> &&input_fn) {
+  int64_t relative_offset{0};
+  detail::execute(registers, relative_offset, input_fn,
+                  detail::default_output_int, 0, false);
+}
+
+void execute(Registers &registers, std::function<int64_t()> &&input_fn,
+             std::function<void(int64_t)> &&output_fn) {
+  int64_t relative_offset{0};
+  detail::execute(registers, relative_offset, input_fn, output_fn, 0, false);
+}
+
+void execute(Registers &registers) {
+  int64_t relative_offset{0};
+  detail::execute(registers, relative_offset, detail::default_input_int,
+                  detail::default_output_int, 0, false);
+}
+
+void execute(const std::vector<int64_t> &initial) {
+  auto registers = from_vector(initial);
+  int64_t relative_offset{0};
+  detail::execute(registers, relative_offset, detail::default_input_int,
+                  detail::default_output_int, 0, false);
+}
+
+int64_t execute(Registers &registers, std::function<int()> &&input_fn,
+                std::function<void(int)> &&output_fn,
+                const int initial_position, const bool break_after_output) {
+  int64_t relative_offset{0};
+  return detail::execute(registers, relative_offset, input_fn, output_fn,
+                         initial_position, break_after_output);
+}
+
+int64_t execute(const int64_t noun, const int64_t verb, Registers registers) {
   registers[1] = noun;
   registers[2] = verb;
 
-  execute(registers);
+  int64_t relative_offset{0};
+  detail::execute(registers, relative_offset, detail::default_input_int,
+                  detail::default_output_int, 0, false);
 
   return registers[0];
 }
@@ -137,7 +202,7 @@ uint64_t execute(const uint64_t noun, const uint64_t verb,
 Registers read() {
   Registers registers;
   size_t position = 0;
-  uint64_t value;
+  int64_t value;
 
   while (std::cin >> value) {
     char junk;
