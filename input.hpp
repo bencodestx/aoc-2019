@@ -11,3 +11,12 @@ template <typename T> std::vector<T> read() {
   }
   return values;
 };
+
+std::vector<std::string> readlines() {
+  std::vector<std::string> lines{};
+  std::string line{};
+  while (std::getline(std::cin, line)) {
+    lines.push_back(line);
+  }
+  return lines;
+}
