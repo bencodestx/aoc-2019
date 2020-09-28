@@ -11,7 +11,7 @@ using Registers = std::unordered_map<int64_t, int64_t>;
 
 Registers from_vector(const std::vector<int64_t> &initial) {
   Registers registers;
-  for (int64_t i = 0; i < std::size(initial); ++i) {
+  for (size_t i = 0; i < std::size(initial); ++i) {
     registers[i] = initial[i];
   }
   return registers;

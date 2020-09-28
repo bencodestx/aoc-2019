@@ -10,7 +10,7 @@ template <typename T> std::vector<T> read() {
     values.push_back(value);
   }
   return values;
-};
+}
 
 std::vector<std::string> readlines() {
   std::vector<std::string> lines{};

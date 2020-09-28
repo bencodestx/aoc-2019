@@ -27,7 +27,7 @@ constexpr double rad_to_deg(const double radians) {
   return radians * half_c;
 }
 
-constexpr double degrees(const Point p) {
+inline double degrees(const Point p) {
   return rad_to_deg(std::atan(std::abs(p.y) / std::abs(p.x)));
 }
 
@@ -45,7 +45,7 @@ constexpr Quadrant quadrant(const Point p) {
   } else {
     return Quadrant::III;
   }
-};
+}
 
 inline double direction_between_points(const Point a, const Point b) {
   const Point delta{b.x - a.x, b.y - a.y};
@@ -82,7 +82,7 @@ inline double direction_between_points(const Point a, const Point b) {
   return 0.0;
 }
 
-constexpr double distance_between_points(const Point a, const Point b) {
+inline double distance_between_points(const Point a, const Point b) {
   const auto x = a.x - b.x;
   const auto y = a.y - b.y;
   return std::sqrt(x * x + y * y);
